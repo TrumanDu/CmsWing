@@ -1,3 +1,4 @@
+/* eslint-disable keyword-spacing,indent */
 // +----------------------------------------------------------------------
 // | CmsWing [ 网站内容管理框架 ]
 // +----------------------------------------------------------------------
@@ -29,7 +30,10 @@ module.exports = class extends think.cmswing.admin {
       map.status = status;
       this.assign('status', status);
     }
-
+    const q = this.get('q');
+   if (!think.isEmpty(q)) {
+     map['order_no|user_id|accept_name|mobile'] = ['like', q];
+   }
     map.is_del = 0;
     map.type = 0;
     // this.config("db.nums_per_page",20)
@@ -45,6 +49,9 @@ module.exports = class extends think.cmswing.admin {
           break;
         case 1001:
           val.channel = '货到付款';
+          break;
+        case 1002:
+          val.channel = "银行汇款";
           break;
         default:
           val.channel = await this.model('pingxx').where({id: val.payment}).getField('title', true);
@@ -159,7 +166,7 @@ module.exports = class extends think.cmswing.admin {
      */
   async seeAction() {
     const id = this.get('id');
-    console.log(id);
+    //console.log(id);
     this.meta_title = '查看订单';
     // 获取订单信息
     const order = await this.model('order').find(id);
@@ -264,11 +271,8 @@ module.exports = class extends think.cmswing.admin {
       this.assign('goods', goods);
       // 获取购买人信息
       // 购买人信息
-      const user = await this.model('member').join({
-        customer: {
-          on: ['id', 'user_id']
-        }
-      }).find(order.user_id);
+      const user = await this.model('member').find(order.user_id);
+      console.log(user);
       this.assign('user', user);
       // 订单信息
       switch (order.payment) {
