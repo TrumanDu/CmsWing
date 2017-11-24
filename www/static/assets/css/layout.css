@@ -2893,7 +2893,7 @@ section.dark.page-header ul.page-options a {
 
 	/* Small Height : 60px */
 	#header.header-sm #topNav a.logo {
-		height:60px;
+		height:70px;
 		line-height:50px;
 	}
 	#header.header-sm #topNav a.logo>img {
@@ -8813,8 +8813,8 @@ ul.slimscroll li.active{
 }
 
 .logo-svg{
-	background-image: url(/static/assets/images/logo.svg);
-    width: 160px;
+	background-image: url(/static/assets/images/logo3.png);
+    width: 184px;
 	background-repeat: no-repeat;
 	background-position: center center;
 }
