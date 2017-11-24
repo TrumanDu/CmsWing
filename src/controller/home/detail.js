@@ -83,7 +83,6 @@ module.exports = class extends think.cmswing.center {
     // 获取模板
     let temp;
     const model = await this.model('cmswing/model').get_model(info.model_id, 'name');
-
     // 详情模版 TODO
     // 手机版模版
 
@@ -123,11 +122,13 @@ module.exports = class extends think.cmswing.center {
     }
     // console.log(plist);
     // 文档无限级目录
-    const ptree_ = await document.where({topid: pid}).field('id,title,pid,name,level as sort').select();
+    const ptree_ = await document.where({topid: pid}).field('id,title,pid,name,level as sort').order('level DESC,create_time ASC').select();
     const ptree = get_children(ptree_, pid, 1);
+    const ptree2 = arr_to_tree(ptree_, pid);
     // console.log(ptree);
     this.assign('topid', pid);
     this.assign('ptree', ptree);
+    this.assign('ptree2', ptree2);
 
     // 如果是目录并且模板为空,模块为视频时，目录id，显示最后更新的主题
     if (info.type == 1 && (think.isEmpty(info.template) || info.template == 0) && info.model_id == 6) {
@@ -146,6 +147,30 @@ module.exports = class extends think.cmswing.center {
     await this.hook('documentDetailAfter', info);
     // 视频播放器钩子
     await this.hook('videoPlayer', info);
+    // 加载页面头部底部钩子
+    const editor = !think.isEmpty(info.editor) ? info.editor : await this.model('cmswing/model').get_model(info.model_id, 'editor');
+    const field_group = await this.model('cmswing/model').get_model(info.model_id, 'field_group');
+    const fields = await this.model('cmswing/attribute').get_model_attribute(info.model_id, true);
+    const fg = parse_config_attr(field_group);
+    const farr = [];
+    for (const key in fg) {
+      for (const f of fields[key]) {
+        if (f.type === 'editor') {
+          farr.push(f);
+          // 添加编辑器钩子
+          if (editor === '0') {
+            await this.hook('pageHeader', f.name, f.value, {$hook_key: f.name});
+            await this.hook('pageFooter', f.name, f.value, {$hook_key: f.name});
+            await this.hook('pageContent', f.name, info[f.name], {$hook_key: f.name});
+          } else {
+            await this.hook('pageHeader', f.name, f.value, {$hook_key: f.name, $hook_type: editor});
+            await this.hook('pageFooter', f.name, f.value, {$hook_key: f.name, $hook_type: editor});
+            await this.hook('pageContent', f.name, info[f.name], {$hook_key: f.name, $hook_type: editor});
+          }
+        };
+      };
+    };
+    this.assign('pagehook', {editor: editor, fields: farr});
     // 判断浏览客户端
     if (this.isMobile) {
       // 手机模版
@@ -158,9 +183,9 @@ module.exports = class extends think.cmswing.center {
       }
       // console.log(temp);
       // 内容分页
-      if (!think.isEmpty(info.content)) {
-        info.content = info.content.split('_ueditor_page_break_tag_');
-      }
+      // if (!think.isEmpty(info.content)) {
+      //   info.content = info.content.split('_ueditor_page_break_tag_');
+      // }
       return this.display(this.mtpl(temp));
     } else {
       if (!think.isEmpty(info.template) && info.template != 0) {
@@ -173,9 +198,9 @@ module.exports = class extends think.cmswing.center {
       // console.log(temp);
       // console.log(info);
       // 内容分页
-      if (!think.isEmpty(info.content)) {
-        info.content = info.content.split('_ueditor_page_break_tag_');
-      }
+      // if (!think.isEmpty(info.content)) {
+      //   info.content = info.content.split('_ueditor_page_break_tag_');
+      // }
       return this.display(`home/detail_${temp}`);
     }
   }
@@ -192,17 +217,16 @@ module.exports = class extends think.cmswing.center {
     // console.log(file_id);
     let dlink;
     if (Number(id[1]) === 1) {
-      const location = await this.model('file').where({id: file_id}).getField('location', true);
       // console.log(location);
       const d = await get_file(file_id);
-      if (Number(this.config('ext.qiniu.is')) === 1 && Number(location) === 1) {
+      if (Number(d.type) === 2) {
         // 七牛下载
         // dlink = await get_file(file_id,"savename",true);
-        const qiniu = this.extService('qiniu','qiniu');
+        const qiniu = this.extService('qiniu', 'attachment');
         dlink = await qiniu.download(d.savename);
       } else {
         // 本地下载
-        dlink = d.savepath + d.savename + '?attname=';
+        dlink = `/home/detail/download?id=${d.id}#${d.name}`;
       }
       // console.log(dlink);
       // 访问统计
@@ -241,5 +265,21 @@ module.exports = class extends think.cmswing.center {
         return this.display();
       }
     }
+  }
+  // 下载文件
+  async downloadAction() {
+    const file = await get_file(this.get('id'));
+    const filePath = `${think.ROOT_PATH}/www${file.savename}`;
+    const userAgent = this.userAgent.toLowerCase();
+    let hfilename = '';
+    if (userAgent.indexOf('msie') >= 0 || userAgent.indexOf('chrome') >= 0) {
+      hfilename = `=${encodeURIComponent(file.name)}`;
+    } else if (userAgent.indexOf('firefox') >= 0) {
+      hfilename = `*="utf8''${encodeURIComponent(file.name)}"`;
+    } else {
+      hfilename = `=${Buffer.from(file.name).toString('binary')}`;
+    }
+    this.ctx.set('Content-Disposition', `attachment; filename${hfilename}`);
+    return this.download(filePath);
   }
 };

@@ -312,7 +312,7 @@ global.trim = function(str) {
  * @returns {*}
  */
 /* global parse_config_attr */
-global.parse_config_attr = function(str) {
+global.parse_config_attr = function(str, sep = ':') {
   let strs;
   if (str.search(/\r\n/ig) > -1) {
     strs = str.split('\r\n');
@@ -326,7 +326,7 @@ global.parse_config_attr = function(str) {
   if (think.isArray(strs)) {
     const obj = {};
     strs.forEach(n => {
-      n = n.split(':');
+      n = n.split(sep);
       obj[n[0]] = n[1];
     });
     return obj;
@@ -452,7 +452,8 @@ global.get_attribute_type = function(type) {
     'price': ['价格', 'varchar(255) NOT NULL'],
     'freight': ['运费', 'varchar(255) NOT NULL'],
     'keyword': ['关键词', 'varchar(255) NOT NULL'],
-    'relation': ['关联', 'varchar(100) NOT NULL']
+    'relation': ['关联', 'varchar(100) NOT NULL'],
+    'atlas': ['图集', 'text NOT NULL']
   };
   return type ? _type[type][0] : _type;
 };
@@ -520,12 +521,7 @@ global.array_diff = function(arr1, arr2) {
   // }
   return temparray;
 };
-// global.call_user_func = function (cb, params) {
-//    let func = global.cb;
-//    func.apply(cb, params);
-// }
-/* 解析列表定义规则 */
-/* global get_list_field */
+
 global.get_list_field = function(data, grid, controller, module) {
   module = module || 'admin';
   // console.log(module);
@@ -706,6 +702,9 @@ global.get_url = (name, id) => {
     return `/p/${id}.html`;
   }
 };
+global.get_pdq = (id) => {
+  return parse_config_attr(think.config('ext.attachment.pdn'), '@')[id];
+};
 /**
  * 获取文档封面图片
  * @param int cover_id
@@ -745,7 +744,7 @@ global.get_pic = async(id, m = null, w = null, h = null) => {
   } else {
     map.path = id;
   }
-  const picture = await think.model('picture').where(map).cache(1000 * 1000).find();
+  const picture = await think.model('ext_attachment_pic').where(map).cache(1000 * 1000).find();
   if (think.isEmpty(picture)) {
     return '/static/noimg.jpg';
   }
@@ -770,7 +769,7 @@ global.get_pic = async(id, m = null, w = null, h = null) => {
       q = `?imageView2${m}${w}${h}`;
     }
 
-    return `//${think.config('ext.qiniu.domain')}/${picture.path}${q}`;
+    return `${get_pdq(picture.type)}/${picture.path}${q}`;
   } else {
     return picture.path;
   }
@@ -1137,12 +1136,11 @@ global.get_file = async(file_id, field, key = false) => {
   if (think.isEmpty(file_id)) {
     return false;
   }
-  const file = await think.model('file').find(file_id);
-  if (file.location == 1 && key && key !=1) {
-    file.savename = `//${think.config('ext.qiniu.domain')}/${file.savename}?download/${file.savename}`;
-  }
-  if (file.location == 1 && key == 1) {
-    file.savename = `//${think.config('ext.qiniu.domain')}/${file.savename}`;
+  const file = await think.model('ext_attachment_file').find(file_id);
+  if (file.type > 0 && key && key !== 1) {
+    file.savename = `//${get_pdq(file.type)}/${file.savename}?download/${file.savename}`;
+  } else if (file.type > 0 && key === 1) {
+    file.savename = `//${get_pdq(file.type)}/${file.savename}`;
   } else {
     file.savename = `${file.savepath}/${file.savename}`;
   }
@@ -1223,20 +1221,26 @@ global.MathRand = function() {
 };
 
 // 更新缓存
-global.update_cache = (type) => {
+global.update_cache = async(type) => {
   switch (type) {
     case 'category':
       // 更新栏目缓存
-      think.cache('sys_category_list', null);
-      think.cache('all_category', null);
-      think.cache('all_priv', null);// 栏目权限缓存
+      await think.cache('sys_category_list', null);
+      await think.cache('all_category', null);
+      await think.cache('all_priv', null);// 栏目权限缓存
       break;
     case 'channel':// 更新频道缓存信息
-      think.cache('get_channel_cache', null);
+      await think.cache('get_channel_cache', null);
       break;
     case 'model':
-      think.cache('get_document_model', null);// 清除模型缓存
-      think.cache('get_model', null);// 清除模型缓存
+      await think.cache('get_document_model', null);// 清除模型缓存
+      await think.cache('get_model', null);// 清除模型缓存
+      break;
+    case 'ext':
+      await think.cache('extcache', null);
+      break;
+    case 'hooks':
+      await think.cache('hookscache', null);
       break;
   }
 };

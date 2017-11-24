@@ -319,6 +319,26 @@ module.exports = class extends think.cmswing.center {
     this.assign('model', model);
     this.meta_title = '新增' + model.title;
     this.active = 'admin/article/index';
+    for (const key in parse_config_attr(model.field_group)) {
+      for (const f of fields[key]) {
+        if (f.type === 'editor') {
+          // 添加编辑器钩子
+          if (model.editor === '0') {
+            await this.hook('homeEdit', f.name, f.value, {$hook_key: f.name});
+          } else {
+            await this.hook('homeEdit', f.name, f.value, {$hook_key: f.name, $hook_type: model.editor});
+          }
+        } else if (f.type === 'picture') {
+          await this.hook('homeUpPic', f.name, 0, {$hook_key: f.name});
+        } else if (f.type === 'pics') {
+          await this.hook('homeUpPics', f.name, '', {$hook_key: f.name});
+        } else if (f.type === 'file') {
+          await this.hook('homeUpFile', f.name, 0, {$hook_key: f.name});
+        } else if (f.type === 'atlas') {
+          await this.hook('homeAtlas', f.name, '', {$hook_key: f.name});
+        };
+      };
+    };
     return this.display();
   }
 
@@ -410,6 +430,28 @@ module.exports = class extends think.cmswing.center {
     this.assign('data', data);
     this.assign('model_id', data.model_id);
     this.assign('model', model);
+    const editor = !think.isEmpty(data.editor) ? data.editor : await this.model('cmswing/model').get_model(data.model_id, 'editor');
+    for (const key in parse_config_attr(model.field_group)) {
+      for (const f of fields[key]) {
+        if (f.type === 'editor') {
+          // 添加编辑器钩子
+          if (editor === '0') {
+            await this.hook('homeEdit', f.name, data[f.name], {$hook_key: f.name});
+          } else {
+            await this.hook('homeEdit', f.name, data[f.name], {$hook_key: f.name, $hook_type: editor});
+          }
+        } else if (f.type === 'picture') {
+          await this.hook('homeUpPic', f.name, data[f.name], {$hook_key: f.name});
+        } else if (f.type === 'pics') {
+          await this.hook('homeUpPics', f.name, data[f.name], {$hook_key: f.name});
+        } else if (f.type === 'file') {
+          await this.hook('homeUpFile', f.name, data[f.name], {$hook_key: f.name});
+        } else if (f.type === 'atlas') {
+          await this.hook('homeAtlas', f.name, data[f.name], {$hook_key: f.name});
+        };
+      };
+    };
+    this.assign('editor', editor);
     return this.display();
   }
   /**
@@ -675,7 +717,7 @@ module.exports = class extends think.cmswing.center {
       for (const val of cate) {
         const priv = await this.model('cmswing/category_priv').priv(val.id, roleid, 'add', 0, false);
         val.priv = priv;
-        if (priv == 1 ) {
+        if (priv == 1) {
           parr.push(val.pid);
         }
       }

@@ -16,7 +16,7 @@ module.exports = class extends think.cmswing.modIndex {
     // auto render template file index_index.html
 
     return this.body = '封面入口';
-    //return this.display();
+    // return this.display();
   }
 
   /**
@@ -57,7 +57,7 @@ module.exports = class extends think.cmswing.modIndex {
     const num = this.page_num();
 
     // 获取面包屑信息
-    const breadcrumb = await this.model('cmswing/category').get_parent_category(cate.id, true);
+    await this.breadcrumb();
 
     // 获取列表数据
     // 条件
@@ -103,7 +103,6 @@ module.exports = class extends think.cmswing.modIndex {
     this.assign('category', cate);
     this.assign('list', data.data);
     this.assign('count', data.count);
-    this.assign('breadcrumb', breadcrumb);
     console.log(this.ctx.controller);
     console.log(this.ctx.action);
 
@@ -216,6 +215,7 @@ module.exports = class extends think.cmswing.modIndex {
       }
       info.detail = img;
     }
+    await this.hook('homeEdit', 'answer_content', '', {$hook_key: 'answer_content', $hook_type: '2_2_200'});
     if (this.isMobile) {
       if (this.isAjax('get')) {
         for (const v of data.data) {

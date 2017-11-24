@@ -80,15 +80,45 @@ module.exports = class extends think.Controller {
   }
 
   async extAction() {
-    return this.body = this.config('ext.qq.appkey');
+      console.log(parse_config_attr(think.config('ext.attachment.loactionurl'),'@')[1]);
+      return this.body = this.config('ext.qq.appkey');
   }
- async hooksAction(){
-   let res = await this.hook('signinBefore');
-   if(res ==='no'){
-     const error = this.controller('cmswing/error');
-     return error.noAction('验证码不正确');
-   }
-   return this.body="ddd";
-   }
+  async hooksAction() {
+    // 带 $hook_type 参数的 视图钩子调用， 参数1，参数2，...{'$hook_type':1},如果由多个参数，{'$hook_type':1} 放最后一个。
+    await this.hook('adminArticleEdit', '风的撒风的撒风的撒发达富啊222', '的撒风大师傅撒', {'$hook_type': 1});
+    // 带 $hook_key 参数的 视图钩子调用， 参数1，参数2，...{'$hook_key':'aaaa'},如果由多个参数，{'$hook_key':'aaaa'} 放最后一个。
+    await this.hook('adminArticleEdit', 'aaaa', '的撒风大师傅撒', {'$hook_key': 'aaaa'});
+    await this.hook('adminArticleEdit', 'bbbb', '的撒风大师傅撒', {'$hook_key': 'bbbb'});
+    // 带 $hook_key 和 $hook_type 参数的 视图钩子调用， 参数1，参数2，...{'$hook_key':'bbbb','$hook_type':2},如果由多个参数，{'$hook_key':'bbbb','$hook_type':2} 放最后一个。
+    await this.hook('adminArticleEdit', 'bbbb', '的撒风大师傅撒', {'$hook_key': 'bbbb', '$hook_type': 2});
+    // 普通调用
+    await this.hook('adminArticleEdit', {'$hook_key2': 'bbbb', '$hook_type2': 2});
+    return this.display();
+  }
+  async cacheAction(){
+    const data = await this.model('cmswing/ext').extcache('editor','setting');
 
+    //console.log(data);
+    return this.body=data;
+  }
+  async topicsAction(){
+    let list = await this.model('document_picture').where({id:['!=',311]}).select();
+    for(let v of list){
+      let arr = [];
+      if(v.pictureurls){
+        for (let vv of v.pictureurls.split(',')){
+          let obj ={}
+          obj.id = vv;
+          obj.name = vv;
+          obj.src = vv;
+          obj.info = vv;
+          arr.push(obj);
+        }
+      }
+      console.log(arr);
+      let data = {atlas: JSON.stringify(arr)};
+      await this.model('document_picture').where({id:v.id}).update(data);
+    }
+    return this.body =22;
+  }
 };

@@ -57,9 +57,9 @@ module.exports = class extends think.cmswing.center {
     let num;
     if (cate.list_row > 0) {
       num = cate.list_row;
-    } else if (cate.model.split(',').length == 1) {
+    } else if (cate.model.split(',').length === 1) {
       const pagenum = await this.model('cmswing/model').get_model(cate.model, 'list_row');
-      if (pagenum != 0) {
+      if (pagenum !== 0) {
         num = pagenum;
       }
     } else {
@@ -261,6 +261,10 @@ module.exports = class extends think.cmswing.center {
     this.assign('category', cate);
     this.assign('list', data.data);
     this.assign('count', data.count);
+    if(this.get('rss')==1){
+      this.header('Content-Type','text/xml');
+      return this.display('cmswing/rss.xml')
+    }
     // console.log(cate)
     let temp = cate.template_lists ? `${cate.template_lists}` : 'index';
     // console.log(cate);

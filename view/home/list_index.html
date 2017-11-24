@@ -105,7 +105,7 @@ CLASSES:
                             </div>
 
                             <div class="divider divider-circle divider-center margin-top-0"><!-- divider -->
-                                <a href="#"><i class="fa fa-rss"></i></a>
+                                <a href="{{cate.url}}-{{order}}{%if group_id or sort%}-{{group_id}}{%endif%}{%if sort%}-{{sortid}}{%endif%}{%if sorturl %}-{%endif%}?rss=1" target="_blank"><i class="fa fa-rss"></i></a>
                             </div>
                         </div>
 
@@ -117,7 +117,7 @@ CLASSES:
                             <!-- IMAGE -->
                             {% if val.cover_id>0 %}
                             <figure class="blog-item-small-image margin-bottom-0">
-                                <img class="img-responsive" src="{{val.cover_id|get_pic('m=1,w=200,h=120')}}" alt="">
+                                <img class="img-responsive lazy" data-original="{{val.cover_id|get_pic('m=1,w=200,h=120')}}" alt="">
                             </figure>
                             {% endif %}
                             <div class="blog-item-small-content">
