@@ -27,9 +27,10 @@ module.exports = class extends think.cmswing.modIndex {
     // 获取面包屑信息
     const breadcrumb = await this.model('cmswing/category').get_parent_category(cid, true);
     this.assign('breadcrumb', breadcrumb);
-    //console.log(breadcrumb);
+    // console.log(breadcrumb);
     this.assign('category', this.m_cate);
     this.meta_title = '发布';
+    await this.hook('homeEdit', 'detail', '', {$hook_key: 'detail', $hook_type: '2_2_300'});
     if (this.isMobile) {
       // 手机端模版
       return this.modDisplay('m');
@@ -84,6 +85,7 @@ module.exports = class extends think.cmswing.modIndex {
     }
     // seo
     this.meta_title = '编辑'; // 标题
+      await this.hook('homeEdit', 'detail', info.detail, {$hook_key: 'detail', $hook_type: '2_2_300'});
     return this.modDisplay();
   }
   // 添加或编辑主题
@@ -144,7 +146,7 @@ module.exports = class extends think.cmswing.modIndex {
         // await this.model("action").log("add_document", "document", res.id, this.user.uid, this.ip(), this.http.url);
         return this.success({name: '添加成功', data: res});
       } else {
-        return this.success({name: '更新成功', data: res});
+        return this.success({name: '更新成功', data: res,url:'/q/' + data.question_id});
       }
     } else {
       return this.fail('操作失败！');

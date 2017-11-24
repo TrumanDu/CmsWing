@@ -33,7 +33,16 @@ module.exports = class extends think.cmswing.admin {
     return this.display();
   }
   async gettreeAction() {
-    const tree = await this.db.gettree(0, 'id,name,title,sort,pid,allow_publish,status');
+    // 添加,编辑,移动合并
+    let mold = 0;
+    if (!think.isEmpty(this.get('mold'))) {
+      mold = this.get('mold');
+    } else {
+      const cid = this.get('from') || this.get('cid') || 0;
+      const res = await this.model('category').field('mold').find(cid);
+      if (!think.isEmpty(res)) { mold = res.mold }
+    }
+    const tree = await this.db.gettree(0, 'id,name,title,sort,pid,allow_publish,status', {mold: mold});
     return this.json(tree);
   }
 
@@ -126,7 +135,7 @@ module.exports = class extends think.cmswing.admin {
         default:
           this.meta_title = '添加栏目';
       }
-
+      await this.hook('adminUpPic', 'icon', 0, {$hook_key: 'icon'});
       return this.display();
     }
   }
@@ -252,6 +261,7 @@ module.exports = class extends think.cmswing.admin {
       // console.log(priv_roleid);
       this.assign('priv_groupid', priv_groupid);
       this.assign('priv_roleid', priv_roleid);
+      await this.hook('adminUpPic', 'icon', info.icon, {$hook_key: 'icon'});
       return this.display();
     }
   }
@@ -273,9 +283,7 @@ module.exports = class extends think.cmswing.admin {
       if (count == 0) {
         await this.model('category').delete({where: {id: id}});
         // 删除分类权限
-        await this.model('category_priv').delete({where: {catid: id}});
-        think.cache('sys_category_list', null);
-        think.cache('all_category', null);
+        await update_cache('category');
         return this.json({ok: 0, info: '删除成功!'});
       } else {
         return this.json({ok: 1, info: `该栏目含有${count}条内容`});
@@ -325,7 +333,7 @@ module.exports = class extends think.cmswing.admin {
     // 删除分类权限
     await this.model('category_priv').delete({where: {catid: id}});
     await this.model('document').delete({where: {category_id: id}});
-    update_cache('category');// 更新栏目缓存
+    await update_cache('category');// 更新栏目缓存
     // 查处要删除的该栏目内容的id
   }
   // 移动/合并栏目
@@ -335,6 +343,9 @@ module.exports = class extends think.cmswing.admin {
       // console.log(data);
       // return false;
       // 检查要移动的栏目是否包含子栏目
+      if (data.target == 0) {
+        return this.fail('请选择目标栏目！');
+      }
       const pid = await this.model('cmswing/category').get_sub_category(data.source);
       // console.log(pid);
       const l = pid.length;
@@ -345,9 +356,7 @@ module.exports = class extends think.cmswing.admin {
       if (data.source == data.target) {
         return this.fail('源栏目不能与目标栏目重复！');
       }
-      if (data.target == 0) {
-        return this.fail('请选择目标栏目！');
-      }
+
       const source = await this.model('category').find(data.source);
       const target = await this.model('category').find(data.target);
       // 获取栏目模型信息
@@ -424,7 +433,7 @@ module.exports = class extends think.cmswing.admin {
         if (data.merge == 1) { // 如果合并删除源栏目
           await this.model('category').delete({where: {id: data.source}});
         }
-        update_cache('category');// 更新栏目缓存
+       await update_cache('category');// 更新栏目缓存
         return this.success({name: '成功！', url: '/admin/category/index'});
       }
     } else {
@@ -480,7 +489,7 @@ module.exports = class extends think.cmswing.admin {
       if (data.merge == 1) { // 如果合并删除源栏目
         await this.model('category').delete({where: {id: data.source_id}});
       }
-      update_cache('category');// 更新栏目缓存
+     await update_cache('category');// 更新栏目缓存
       return this.success({name: '成功！', url: '/admin/category/index'});
     } else {
       const data = this.get();
@@ -512,7 +521,7 @@ module.exports = class extends think.cmswing.admin {
   async isappAction() {
     const up = await this.model('category').where({id: this.get('ids')}).update({isapp: this.get('isapp')});
     if (up) {
-      update_cache('category');// 更新栏目缓存
+     await update_cache('category');// 更新栏目缓存
       return this.success({name: '操作成功!'});
     } else {
       return this.fail('操作失败!');

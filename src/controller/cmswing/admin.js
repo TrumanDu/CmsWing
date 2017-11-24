@@ -24,13 +24,14 @@ module.exports = class extends think.Controller {
     this.is_admin = await this.isadmin();
     // 后台菜单
     this.adminmenu = await this.model('cmswing/menu').getallmenu(this.user.uid, this.is_admin);
-    // console.log(this.adminmenu);
-    // this.assign("setup", this.setup);
-    // 菜单当前状态
-
-    /**
-         * 权限验证超级管理员
-         */
+    const allmenu = this.config('setup.MENU_GROUP');
+    this.MenuGroup = {};
+    for (const key in this.adminmenu) {
+      this.MenuGroup[key] = allmenu[key];
+    }
+    /** 菜单当前状态
+     *  权限验证超级管理员
+     */
     const url = `${this.ctx.controller}/${this.ctx.action}`;
     // console.log(url);
     if (!this.is_admin) {
@@ -41,12 +42,7 @@ module.exports = class extends think.Controller {
         return error.noAction('未授权访问!');
       }
     }
-
-    // console.log(this.uuu.uid);
-    // this.active = this.http.url.slice(1),
-    // console.log(this.active);
     this.active = this.ctx.controller + '/' + this.ctx.action;
-    // think.log(this.active);
     // 后台提示
     // 审核提示
     const notifications = {};
@@ -111,16 +107,19 @@ module.exports = class extends think.Controller {
     msg = think.extend({ 'success': '操作成功！', 'error': '操作失败！', 'url': '', 'ajax': this.isAjax() }, msg);
     const res = await this.model(model).where(where).update(data);
     if (res) {
+      console.log(model);
       switch (model) {
         case 'channel':// 更新频道缓存信息
-          update_cache('channel');// 更新频道缓存信息
+          await update_cache('channel');// 更新频道缓存信息
           break;
         case 'category':// 更新全站分类缓存
-          update_cache('category');// 更新栏目缓存
+          await update_cache('category');// 更新栏目缓存
           break;
         case 'model':
-          update_cache('model');// 更新栏目缓存
+          await update_cache('model');// 更新栏目缓存
           break;
+        case 'ext':
+          await update_cache('ext');
       }
       return this.success({ name: msg.success, url: msg.url });
     } else {

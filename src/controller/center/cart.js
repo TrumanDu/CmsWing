@@ -210,11 +210,11 @@ module.exports = class extends think.cmswing.center {
     let post = this.para('ids');
     const addrid = this.get('addrid');
     if (think.isEmpty(post)) {
-      const error = this.controller('common/error');
+      const error = this.controller('cmswing/error');
       return error.noAction('木有选项要结算的宝贝');
     }
     if (think.isEmpty(this.cart.data)) {
-      const error = this.controller('common/error');
+      const error = this.controller('cmswing/error');
       return error.noAction('木有宝贝提交啥订单呢!');
     }
 
@@ -417,7 +417,11 @@ module.exports = class extends think.cmswing.center {
       }
     }
     let data = this.post();
+    if (think.isEmpty(data.address)) {
+      return this.fail('收货人信息不能为空!');
+    }
     // console.log(data);
+    // return this.fail('ddd');
     // return false;
     let order_amount;// 订单金额
     let payable_amount;// 应付金额，商品的原价
@@ -475,8 +479,41 @@ module.exports = class extends think.cmswing.center {
     //    4、如果店铺同时使用统一运费和不同的运费模板规则，那么顾客下单时统一运费单独计算运费，不同的运费模板
     // TODO
     // 计算商品的总重量
+    // 拿到运费模板
+    let farr = [];
+    for (const cg of isgoods) {
+      cg.fare = await this.model('document_shop').where({id: cg.product_id}).getField('fare', true);
+      console.log(cg.fare);
+      if (Number(cg.fare) !== 0) {
+        const isd = await this.model('fare').where({id: cg.fare}).getField('is_default', true);
+        if (isd === 1) {
+          cg.fare = 0;
+        }
+      }
+      farr.push(cg.fare);
+    }
+    // 去重
+    farr = think._.uniq(farr);
+    console.log(farr);
+    const cgarr = [];
+    for (const fa of farr) {
+      const fobj = {};
+      fobj.id = fa;
+      fobj.cg = think._.filter(isgoods, ['fare', fa]);
+      cgarr.push(fobj);
+    }
+    think.logger.info(cgarr[0].cg);
+    // 计算运费模板
+    const rarr = [];
+    for (const r of cgarr) {
+      const rf = await this.model('cmswing/fare').getfare(r.cg, data.address, this.user.uid, r.id);
+      console.log(rf);
+      rarr.push(rf);
+    }
+    console.log(rarr);
+    data.real_freight = think._.sum(rarr);
 
-    data.real_freight = await this.model('cmswing/fare').getfare(isgoods, data.address, this.user.uid); ;
+    // data.real_freight = await this.model('cmswing/fare').getfare(isgoods, data.address, this.user.uid); ;
 
     // 支付状态 pay_stayus 0:未付款 ,1:已付款
     data.pay_status = 0;

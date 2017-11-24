@@ -38,15 +38,9 @@ module.exports = class extends think.Model {
       if (create) {
         // 更新表字段
         const res = await this.updateField(data);
-        if (!res) {
-          return false;
-        }
       }
       data.update_time = new Date().valueOf();
       const status = await this.update(data);
-      if (!status) {
-        return false;
-      }
     }
     return data;
   }
@@ -222,9 +216,7 @@ module.exports = class extends think.Model {
     }
     let sql = `ALTER TABLE \`${this.table_name}\` CHANGE COLUMN \`${last_field}\` \`${_field.name}\`  ${_field.field} ${def} COMMENT \'${_field.title}\' ;`;
     sql = this.parseSql(sql);
-    console.log(sql);
     const res = await this.model('mysql').execute(sql);
-    console.log(res);
     return res == 0;
   }
 

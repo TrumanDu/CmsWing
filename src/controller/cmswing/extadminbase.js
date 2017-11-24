@@ -27,6 +27,10 @@ module.exports = class extends Admin {
     const c = this.ctx.controller.split('/');
     this.extConfig = think.app.controllers[`ext/${c[1]}/config`];
     this.extPath = `${think.ROOT_PATH}/src/controller/ext/${c[1]}`;
+    const extadminleftlist = await this.model('ext').where({status: 1, isadm: 1}).order('sort DESC, installtime DESC').select();
+    this.assign('extadminleftlist', extadminleftlist);
+    this.tactive = 'article';
+    this.assign({'navxs': true});
   }
 
   /**
@@ -47,10 +51,8 @@ module.exports = class extends Admin {
    */
   async sortAction(table, id = 'id') {
     table = table || 'ext_' + this.ctx.controller.split('/')[1];
-    console.log(table);
     const param = this.para('sort');
     const sort = JSON.parse(param);
-    console.log(sort);
     const data = [];
     for (const v of sort) {
       const map = {};
@@ -58,12 +60,10 @@ module.exports = class extends Admin {
       map.sort = v.sort;
       data.push(map);
     }
-    const res = await this.model(table).updateMany(data);
-    if (res > 0) {
-      return this.success({ name: '更新排序成功！'});
-    } else {
-      return this.fail('排序失败！');
-    }
+    await this.model(table).updateMany(data);
+    await update_cache('ext');
+    await update_cache('hooks');
+    return this.success({ name: '更新排序成功！'});
   }
 
   /**
@@ -78,6 +78,8 @@ module.exports = class extends Admin {
       // console.log(data);
       const res = await this.model('ext').where({ext: this.ext.ext}).update({setting: JSON.stringify(data)});
       if (res) {
+        await update_cache('ext');
+        await update_cache('hooks');
         process.send('think-cluster-reload-workers'); // 给主进程发送重启的指令
         return this.success({ name: '更新成功！'});
       } else {
@@ -223,12 +225,12 @@ module.exports = class extends Admin {
     // 导入数据库文件
     const sqlpath = !think.isEmpty(data.sql) ? path.join(this.extPath, `${data.sql}`) : path.join(this.extPath, `${ext}.sql`);
     if (think.isFile(sqlpath)) {
-      let content = fs.readFileSync(sqlpath, 'utf8');
+      const sqlfile = fs.readFileSync(sqlpath, 'utf8');
       // todo 自动适配表名
       // 导入数据库
-      content = content.split(/(?:\r\n|\r|\n)/g).filter(item => {
+      let content = sqlfile.split(/(?:\r\n|\r|\n)/g).filter(item => {
         item = item.trim();
-        const ignoreList = ['--', 'SET', '#', 'LOCK', 'UNLOCK'];
+        const ignoreList = ['--', 'SET', '#', 'LOCK', 'UNLOCK', 'INSERT'];
         for (const it of ignoreList) {
           if (item.indexOf(it) === 0) {
             return false;
@@ -236,21 +238,25 @@ module.exports = class extends Admin {
         }
         return true;
       }).join('');
-      content = content.replace(/\/\*.*?\*\//g, '').replace(/cmswing_/g, this.config('model.mysql.prefix') || '');
-      content = content.trim();
-      content = content.replace(/\s\s+/g, ' ').trim();
+      content = content.replace(/\/\*.*?\*\//g, '');
       content = content.substring(0, content.length - 1);
+      // console.log(content);
       const arr = content.split(';');
-      for (let i = 0; i < arr.length; i++) {
-        if (arr[i].toUpperCase().indexOf('INSERT') !== 0 && arr[i].toUpperCase().indexOf('DROP') !== 0 && arr[i].toUpperCase().indexOf('CREATE')) {
-          arr[i - 1] += arr[i];
-          arr.splice(i, 1);
+      // console.log(arr);
+      const insert = sqlfile.split(/(?:\r\n|\r|\n)/g).filter(item => {
+        item = item.trim();
+        if (item.indexOf('INSERT') === 0) {
+          return true;
         }
-      }
+        return false;
+      });
+        // console.log(insert);
+      const sqlarr = arr.concat(insert);
       try {
-        for (let item of arr) {
+        for (let item of sqlarr) {
           item = item.trim();
           if (item) {
+            item = item.replace(/cmswing_/g, this.config('model.mysql.prefix') || '');
             think.logger.info(item);
             await this.model('mysql').execute(item);
           }
@@ -260,6 +266,8 @@ module.exports = class extends Admin {
         return this.fail('数据表导入失败，请在控制台下查看具体的错误信息，并在 GitHub 上发 issue。');
       }
     }
+    await update_cache('ext');
+    await update_cache('hooks');
     process.send('think-cluster-reload-workers'); // 给主进程发送重启的指令
     return this.success({name: `安装成功！`, url: `/admin/ext/index`});
   }
@@ -285,6 +293,8 @@ module.exports = class extends Admin {
     // 删除数据库，表
     const tables = data.table;
     await this.deltable(tables);
+    await update_cache('ext');
+    await update_cache('hooks');
     process.send('think-cluster-reload-workers'); // 给主进程发送重启的指令
     return this.success({name: '卸载成功!'});
   }
@@ -322,6 +332,8 @@ module.exports = class extends Admin {
     }
     // 导入数据库文件
     // todo
+    await update_cache('ext');
+    await update_cache('hooks');
     process.send('think-cluster-reload-workers'); // 给主进程发送重启的指令
     return this.success({name: '重载成功！', url: '/admin/ext/index'});
   }
@@ -332,6 +344,7 @@ module.exports = class extends Admin {
    */
   async delextAction() {
     const ext = this.get('ext');
+    if (ext === 'demo') return this.fail('不允许删除');
     const extpath = `${think.ROOT_PATH}/src/controller/ext/${ext}`;
     const data = this.extConfig;
     // 删除数据库，表
@@ -340,6 +353,8 @@ module.exports = class extends Admin {
     await think.rmdir(extpath).then(() => {
       console.log('删除完成');
     });
+    await update_cache('ext');
+    await update_cache('hooks');
     process.send('think-cluster-reload-workers'); // 给主进程发送重启的指令
     return this.success({name: '删除成功！'});
   }
