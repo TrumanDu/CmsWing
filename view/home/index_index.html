@@ -2,6 +2,7 @@
 <link href="/static/assets/css/layout-question.css" rel="stylesheet" type="text/css" />
 <link href="/static/css/creative.min.css" rel="stylesheet"> {% endblock %} {% block content %}
 
+
 <header class="masthead">
 	<div class="header-content">
 		<div class="header-content-inner">
@@ -18,7 +19,8 @@
 </header>
 
 
-<section class="fdb-block bg-dark" style="background-image: url(/static/imgs/bg_1.svg);">
+<div id="prices">
+<section  class="fdb-block bg-dark" style="background-image: url(/static/imgs/bg_1.svg);">
     <div class="container">
       <div class="row text-center">
         <div class="col">
@@ -26,7 +28,7 @@
         </div>
       </div>
 
-      <div class="row mt-5 align-items-center no-gutters" style="padding: 180px 0">
+      <div class="row mt-5 align-items-center no-gutters" style="padding: 160px 0">
         <div class="col-12 col-sm-10 col-md-8 m-auto col-lg-4 text-center">
           <div class="bg-gray pb-5 pt-5 pl-4 pr-4">
             <h2 class="font-weight-light">Basic</h2>
@@ -38,7 +40,6 @@
               <li>Item 2</li>
               <li>Item 3</li>
             </ul>
-
           </div>
         </div>
 
@@ -53,11 +54,10 @@
               <li>Item 2</li>
               <li>Item 3</li>
             </ul>
-
           </div>
         </div>
 
-        <div class="col-12 col-sm-10 col-md-8 ml-auto mr-auto col-lg-4 text-center mt-4 mt-lg-0">
+        <div class="col-12 col-sm-10 col-md-8 m-auto col-lg-4 text-center">
           <div class="bg-gray pb-5 pt-5 pl-4 pr-4">
             <h2 class="font-weight-light">OEM</h2>
 
@@ -68,12 +68,12 @@
               <li>Item 2</li>
               <li>Item 3</li>
             </ul>
-
           </div>
         </div>
       </div>
     </div>
   </section>
+</div>
 
 <section>
 	<div class="container">
@@ -349,4 +349,5 @@
 		{{HOOK@homeEnd|safe}}
 	</div>
 </section>
+
 {% endblock %} {%block script%} {%endblock%}
