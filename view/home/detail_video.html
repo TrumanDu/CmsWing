@@ -276,23 +276,7 @@ CLASSES:
                         <!-- /RECENT -->
                     </div>
                 </div>
-                <!-- TAGS -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <a class="btn btn-primary btn-xs pull-right">更多</a>
-                        <h2 class="panel-title">话题</h2>
-                    </div>
-                    <div class="panel-body padding-10">
-                        {% keywords data ="kws",type="hot",cache="1000"%}
-                        {%for key in kws%}
-                        <a class="tag" href="{{key.url}}">
-                            <span class="txt">{{key.keyname}}</span>
-                            <span class="num">{{key.videonum}}</span>
-                        </a>
-                        {%endfor%}
-                    </div>
-
-                </div>
+               
 
             </div>
 
