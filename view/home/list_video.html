@@ -72,10 +72,10 @@ CLASSES:
                             <ul class="nav nav-pills mix-filter">
 
                                 <li class="filter {%if group_id==0%}active{%endif%}"><a href="{{cate.url}}">全部</a></li>
-                                {% groups data="groups",cid=category.id%}
+                                <!-- {% groups data="groups",cid=category.id%}
                                 {%for v in groups%}
                                 <li class="filter {%if group_id==v.id%}active{%endif%}"><a href="{{cate.url}}-{{order}}-{{v.id}}{%if sort%}-{{sortid}}{%endif%}{%if sorturl %}-{%endif%}{{sorturl}}">{{v.name}}</a></li>
-                                {%endfor%}
+                                {%endfor%} -->
                             </ul>
                             {%if category.id|priv(controller.user.roleid,'add',0,false)%}
                             <!--投稿按钮-->

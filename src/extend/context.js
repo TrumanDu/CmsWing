@@ -8,7 +8,9 @@ module.exports = {
   get isMobile() {
     const userAgent = this.userAgent.toLowerCase();
     const mList = ['iphone', 'android'];
-    return mList.some(item => userAgent.indexOf(item) > -1);
+    // 注释掉手机端
+    return false;
+    // return mList.some(item => userAgent.indexOf(item) > -1);
   },
   moment: moment,
   cmswing: require(path.join(think.ROOT_PATH, 'package.json'))
