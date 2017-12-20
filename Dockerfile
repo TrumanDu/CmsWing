@@ -8,5 +8,5 @@ RUN apk add --no-cache --virtual .build-deps-yarn git \
     && cd CmsWing \
     && npm install --production --silent 
 WORKDIR /CmsWing
-VOLUME /CmsWing/wwww
+VOLUME /CmsWing/www
 CMD npm start
