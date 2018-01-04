@@ -4,7 +4,7 @@ module.exports = {
   description: '网站附件上传管理', // 插件描述
   isadm: 1, // 是否有后台管理，1：有，0：没有，入口地址:'/ext/attachment/admin/index'
   isindex: 0, // 是否需要前台访问，1：需要，0：不需要,入口地址:'/ext/attachment/index/index'
-  version: 'v1.0', // 版本号
+  version: '1.1', // 版本号
   author: 'cmswing', // 作者
   table: ['attachment', 'attachment_file', 'attachment_pic'], // 插件包含的 数据库表，不包含表前缀，如：cmswing_ext_table 就是 table，多个['table','table_2']没有留空数组。
   sql: '', // 插件安装的时候会找个名字的sql文件导入，默认 插件目录名.sql;
@@ -57,6 +57,53 @@ module.exports = {
                     <div class="post-sum">
                         <p>申请完成后会得到 AccessKey/SecretKey，在 个人中心 &gt; 密钥管理 里面查看和修改。</p>
                     </div>`
+        }
+      ]
+    },
+    {
+      '水印设置': [
+        {
+          'name': 'mark',
+          'label': '图片:',
+          'type': 'pic',
+          'value': '960',
+          'html': '水印图片'
+        },
+        {
+          'name': 'right',
+          'label': '右边距:',
+          'type': 'text',
+          'value': '10',
+          'html': '只需要填写数字,列如:<code>10</code>'
+        },
+        {
+          'name': 'bottom',
+          'label': '下边距:',
+          'type': 'text',
+          'value': '10',
+          'html': '只需要填写数字,列如:<code>10</code>'
+        },
+        {
+          'name': 'left',
+          'label': '最小左边距:',
+          'type': 'text',
+          'value': '100',
+          'html': '只需要填写数字,列如:<code>100</code>'
+        },
+        {
+          'name': 'top',
+          'label': '最小上边距:',
+          'type': 'text',
+          'value': '100',
+          'html': '只需要填写数字,列如:<code>100</code>'
+        },
+        {
+          'name': 'state', // 配置在表单中的键名 ,这个会是this.config('title')
+          'label': '是否启用:', // 表单的文字
+          'type': 'radio',
+          'options': {'1': '启用', '0': '禁用'},
+          'value': '0',
+          'html': '选择启用后,符合条件的图片将会添加水印'
         }
       ]
     }
