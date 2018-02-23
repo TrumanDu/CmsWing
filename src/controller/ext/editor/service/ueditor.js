@@ -25,7 +25,7 @@ module.exports = class extends think.Service {
     // console.log(fileField);
     // console.log(http);
     if (type === 'remote') {
-      //this.saveRemote();
+      // this.saveRemote();
     } else if (type === 'base64') {
       this.upBase64();
     } else {
@@ -40,7 +40,6 @@ module.exports = class extends think.Service {
   upFile() {
     const http = this.http;
     const file = http.file(this.fileField);
-    console.log(file);
     if (!think.isFile(file.path)) {
       this.stateInfo = '找不到临时文件';
       return;
@@ -64,7 +63,18 @@ module.exports = class extends think.Service {
       return;
     }
     // 移动文件
-    fs.renameSync(file.path, this.filePath);
+    // fs.renameSync(file.path, this.filePath);
+    /* mv(file.path, this.filePath, function(err) {
+      if (err) {
+        console.error('file moved fail', err);
+      }
+    }); */
+    var readStream = fs.createReadStream(file.path);
+    var writeStream = fs.createWriteStream(this.filePath);
+    readStream.pipe(writeStream);
+    readStream.on('end', function() {
+      fs.unlinkSync(file.path);
+    });
     // 添加水印
     if (this.config.mark == true) {
       const mark = think.extService('mark', 'attachment');
