@@ -63,18 +63,8 @@ module.exports = class extends think.Service {
       return;
     }
     // 移动文件
-    // fs.renameSync(file.path, this.filePath);
-    /* mv(file.path, this.filePath, function(err) {
-      if (err) {
-        console.error('file moved fail', err);
-      }
-    }); */
-    var readStream = fs.createReadStream(file.path);
-    var writeStream = fs.createWriteStream(this.filePath);
-    readStream.pipe(writeStream);
-    readStream.on('end', function() {
-      fs.unlinkSync(file.path);
-    });
+    fs.renameSync(file.path, this.filePath);
+
     // 添加水印
     if (this.config.mark == true) {
       const mark = think.extService('mark', 'attachment');
