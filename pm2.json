@@ -2,7 +2,7 @@
   "apps": [{
     "name": "CMSWing",
     "script": "production.js",
-    "cwd": "/opt/app",
+    "cwd": "/opt/app/CmsWing/",
     "exec_mode": "fork",
     "max_memory_restart": "1G",
     "autorestart": true,
