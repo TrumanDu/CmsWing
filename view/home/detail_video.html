@@ -52,6 +52,13 @@ CLASSES:
     </div>
 </section>
 <!-- /PAGE HEADER -->
+
+<section class="page-header page-header-xs">
+        <div class="container">
+            <font color="red" size="1">注意：若无法播放请点击</font> <font  size="5"><a href="{{info.videourl}}">{{info.title}}</a></font>
+        </div>
+    </section>
+
 <!-- -->
 <section class="container padding-top-15 padding-bottom-15">
     <!-- OWL SLIDER -->
@@ -143,7 +150,7 @@ CLASSES:
 <section class="page-header page-header-xs shadow-after-3">
     <div class="container">
 
-        <h1 class="blog-post-title size-18">{{info.title}}</h1>
+        <font color="red" size="2">无法播放请点击</font><h1 class="blog-post-title size-18">{{info.title}}</h1>
         <ul class="page-options list-inline">
             {%if previous.id%}
             <li><a href="{{previous.name|get_url(previous.id)}}" title="{{previous.title}}" class="glyphicon glyphicon-menu-left"></a></li>
